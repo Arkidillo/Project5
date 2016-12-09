@@ -22,8 +22,8 @@ static int comp(const void *a, const void *b){//Comparison method to be used by 
 void stop_word(struct table* table){
 	int i = 0;
 	int j = 0;
-	
-	struct node* currNode;	
+
+	struct node* currNode;
 
 	for (i = 0; i < table->numBuckets; i++){//Go through each bucket in the table
 		currNode = table->buckets[i].head;
@@ -39,11 +39,11 @@ void stop_word(struct table* table){
 void rank(struct table* table, char** query, int numDocs){
   int i = 0;
   int j = 0;
-  int k = 0; 
+  int k = 0;
   double *documentWordSum = malloc(sizeof(double) * (numDocs));
   double *originalOrder = malloc(sizeof(double) * (numDocs));
   int *dontPrint = malloc(sizeof(int) * numDocs);
-  
+
   //Figures out which documents contain 0 of the words, and thus which document not to print, BEFORE removing the stop words.
   for (j = 0; j < numDocs; j++){
     for (i = 0; i < numWords; i++){//Go through all words in the query, and see if the find freq returns 0 for all
@@ -60,7 +60,7 @@ void rank(struct table* table, char** query, int numDocs){
     }
   }
 
-   
+
 
   idf(table, numDocs);//Changes the hashtable frequency to account for the idf
   stop_word(table);//removes stop words
@@ -68,24 +68,24 @@ void rank(struct table* table, char** query, int numDocs){
   for (i = 0; i < numDocs; i++){
 	documentWordSum[i] = 0; //Set the array at each index to 0 in the beginning.
 	for (j = 0; j < numWords; j++){
-		documentWordSum[i] += findFreq(table, query[j], i + 1);//Sums the frequency of every word for each document    
+		documentWordSum[i] += findFreq(table, query[j], i + 1);//Sums the frequency of every word for each document
 	}
 	originalOrder[i] = documentWordSum[i];//Save the oringal document tf-idf value order into another array
   }
 
   qsort(documentWordSum, numDocs, sizeof(double), comp);//Sort the documents by rank
-  
-  
+
+
   int* docsPrinted = malloc(sizeof(int));
   int docsPrintedIndex = 0;
   int flag = 0;
   int flag2 = 0;
-  
+
   printf("List of relevant documents: \n");
-  
+
   for (i = 0; i < numDocs; i++){//For the highest score, go through the original order, and when one matches, the index of that plus one is the document id.
     for (j = 0; j < numDocs; j++){//This loop goes through the orininal document order array
-      if (fabs(originalOrder[j] - documentWordSum[i]) < 0.00001){//Checks if this document 
+      if (fabs(originalOrder[j] - documentWordSum[i]) < 0.00001){//Checks if this document
         for (k = 0; k < docsPrintedIndex; k++){
           if (docsPrinted[k] == j+1){//Prevents the same document from being printed twice.
             flag = 1;
@@ -112,7 +112,7 @@ void rank(struct table* table, char** query, int numDocs){
         flag = 0;
       }
     }
-  }  
+  }
 }
 
 void training(struct table* table, char** query){
@@ -122,9 +122,9 @@ void training(struct table* table, char** query){
   char fileName[100];
   char* buffer = malloc(LINE_MAX * sizeof(char));
   char* word;
-    
 
-  sprintf(fileName, "../Project5/dir/D%d.txt", i);//Set fileName = the path + the index variable of the document
+
+  sprintf(fileName, "./dir/D%d.txt", i);//Set fileName = the path + the index variable of the document
 
 
   while ((inFile = fopen(fileName, "r")) != NULL){  //continue to read in files until opening it yields NULL (aka, no file exists)
@@ -134,36 +134,36 @@ void training(struct table* table, char** query){
         if (strcmp(buffer, "\n") == 0){//If the line is empty, but there are still more lines to be read, skip to next read line
           continue;
         }
-        
+
         if (buffer[strlen(buffer) - 1] == '\n'){ //If the last character is a newline (all lines besides the last line), remove it
           buffer[strlen(buffer) - 1] = '\0';
         }
-        
-        word = strtok(buffer, " ");  //Read the first word and set the string for strtok 
+
+        word = strtok(buffer, " ");  //Read the first word and set the string for strtok
 
         if(word != NULL){
           hash_table_insert(table, word, i);//Insert the first word into the table
         }
-        
+
         while ((word = strtok(NULL, " ")) != NULL){
           hash_table_insert(table, word, i);//Insert every word in the line to the hashtable
         }
       }
-      
+
       fclose(inFile);//Close the file when you are done
-    
+
       i++;
       sprintf(fileName, "../Project5/dir/D%d.txt", i);//Set the filename to Di+1.txt
   }
 
   free(buffer);
-  
+
   rank(table, query, i - 1);//i will be 1 past the set of documents.
 }
 
 void printHashTable(struct table* t){
   int i = 0;
-  
+
   for (i = 0 ;i < t->numBuckets; i++){
     printList(t->buckets + i); //should be the ith term in the array of pointers
   }
@@ -176,18 +176,18 @@ char** read_query(){
   char** query; //Query needs to be a double pointer because you have a pointer to the word, and that is a pointer to an array of characaters
   char* word;
   char buffer[LINE_MAX];
-  
+
   printf("Enter your search query: ");
   fgets(buffer, LINE_MAX, stdin);  //First fgets to clear the left over newline from the scanf.
   fgets(buffer, LINE_MAX, stdin);
-  printf("\n");  
- 
+  printf("\n");
+
   query = malloc(sizeof(char*));  //Malloc query to be the number of termns. Then, you need to malloc each one according to its size (strlen)
-  
-  word = strtok(buffer, " ");  //Read the first word and set the string for strtok 
-  query[i] = malloc(sizeof(char) * (strlen(word) + 1));  //Malloc that specific word for 
+
+  word = strtok(buffer, " ");  //Read the first word and set the string for strtok
+  query[i] = malloc(sizeof(char) * (strlen(word) + 1));  //Malloc that specific word for
   strcpy(query[i], word);
-  
+
   while ((word = strtok(NULL, " ")) != NULL){
     i++;
     query = realloc(query, sizeof(char*) * i+1); //Increase the size of query by 1 for each new word that is read in.
@@ -205,22 +205,22 @@ int main(){
   char** query;
 
   struct table *table = malloc(sizeof(struct table)); //Memory allocated for table (should only have to allocate space for one pointer)
-  
+
   //Read user input for number of bucetks:
   printf("How many buckets should the hashtable have?");
   scanf("%d", &numBuckets);
-  
+
   //Malloc that many buckets
   table->buckets = malloc(sizeof(struct bucket) * numBuckets);
   table->numBuckets = numBuckets;
-   
+
   //Read in search query
-  
+
   query = read_query();
-  
+
   training(table, query);
   printHashTable(table);
- 
-  printf("\n"); 
+
+  printf("\n");
   return 0;
 }

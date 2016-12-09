@@ -115,7 +115,7 @@ void rank(struct table* table, char** query, int numDocs){
   }
 }
 
-void training(struct table* table, char** query){
+int training(struct table* table){
   //Read in all the words of the documents into the hashtable.
   FILE *inFile = malloc(sizeof(FILE));//If inFile is a pointer to a file, then we must need to allocate memory sizeof(FILE) on the stack
   int i = 1;
@@ -158,7 +158,8 @@ void training(struct table* table, char** query){
 
   free(buffer);
 
-  rank(table, query, i - 1);//i will be 1 past the set of documents.
+  return i - 1;//i will be 1 past the set of documents.
+
 }
 
 void printHashTable(struct table* t){
@@ -203,6 +204,7 @@ char** read_query(){
 int main(){
   int numBuckets;
   char** query;
+  int i = 0;
 
   struct table *table = malloc(sizeof(struct table)); //Memory allocated for table (should only have to allocate space for one pointer)
 
@@ -218,7 +220,8 @@ int main(){
 
   query = read_query();
 
-  training(table, query);
+  i = training(table);
+  rank(table, query, i);
   printHashTable(table);
 
   printf("\n");

@@ -43,6 +43,10 @@ void rank(struct table* table, char** query, int numDocs){
   double *documentWordSum = malloc(sizeof(double) * (numDocs));
   double *originalOrder = malloc(sizeof(double) * (numDocs));
   int *dontPrint = malloc(sizeof(int) * numDocs);
+  int *docsPrinted = malloc(sizeof(int));
+  int docsPrintedIndex = 0;
+  int flag = 0;
+  int flag2 = 0;
 
   //Figures out which documents contain 0 of the words, and thus which document not to print, BEFORE removing the stop words.
   for (j = 0; j < numDocs; j++){
@@ -75,11 +79,6 @@ void rank(struct table* table, char** query, int numDocs){
 
   qsort(documentWordSum, numDocs, sizeof(double), comp);//Sort the documents by rank
 
-
-  int* docsPrinted = malloc(sizeof(int));
-  int docsPrintedIndex = 0;
-  int flag = 0;
-  int flag2 = 0;
 
   printf("List of relevant documents: \n");
 

@@ -7,10 +7,11 @@
 struct bucket* hashWord(struct table* table, char* word){
   int j = 0;//Calculate the hash value of the word
   int sum = 0;
+  struct bucket *list;
   for (j = 0; j < strlen(word); j++){
     sum += (int)word[j];  //Sums the ascii values of the word
   }
-  struct bucket *list = table->buckets + (sum % table->numBuckets);
+  list = table->buckets + (sum % table->numBuckets);
   return list;
 }
 
@@ -32,28 +33,29 @@ void printList(struct bucket *list)
   printf("List Contents: + length: %d\n", list->numNodes);
   while(entry != NULL)
   {
-    printf("  %s idf: %lf\n", entry->word, entry->idf);
+    printf("  %s idf: %f\n", entry->word, entry->idf);
     printDocs(entry->head);
     entry = entry->next;
   }
 }
 void printDocs(struct docNode *head){
 	while(head!=NULL){
-		printf("\t%d: %lf\n", head->id, head->frequency);
+		printf("\t%d: %f\n", head->id, head->frequency);
 		head = head->next;
 	}
 }
 
 
-void addNode(struct bucket *list, char* word, int id) 
+void addNode(struct bucket *list, char* word, int id)
 {
   struct node *newNode;
+  struct node *currNode = list->head;
   if (list == NULL){//Checks if the list has not been initialized
     printf("ERROR: List is empty \n");
     return;
   }
-  
-  struct node *currNode = list->head;
+
+
     if (currNode == NULL){//checks if the list is empty, if it is , it will add the node there
       	list->numNodes = 1;
 	newNode = malloc(sizeof(struct node));
@@ -67,7 +69,7 @@ void addNode(struct bucket *list, char* word, int id)
 	addDoc(newNode, id);
 	list->head = newNode;
       return;
-    } 
+    }
 
 	if (strcmp(currNode->word, word) == 0){//if the head has the word you are looking to add, add a document there
 		currNode->numDocs += addDoc(currNode, id);
@@ -75,12 +77,12 @@ void addNode(struct bucket *list, char* word, int id)
 	}
       while(currNode->next != NULL){//iterates through the loop until you reach the end of the list
         if (strcmp(currNode->next->word, word) == 0){//If the words are the same, and from the same doccument, then increment the frequency of the word, and don't insert it
-          currNode->next->numDocs +=  addDoc(currNode->next, id);//returns a 0 if the document was already counted 
+          currNode->next->numDocs +=  addDoc(currNode->next, id);//returns a 0 if the document was already counted
           return;
         }
 
         currNode = currNode->next;
-        
+
       }
 
       if (strcmp(currNode->word, word) == 0){//LAST WORD: if the words are the same, and from the same doccument, then increment the frequency of the word, and don't insert it
@@ -98,25 +100,26 @@ void addNode(struct bucket *list, char* word, int id)
 	newNode->next = NULL;
 	addDoc(newNode, id);//make sure the doc is inserted into the linked list of documents
 	currNode->next = newNode;//inserts the node once you have reacahed the end of the list
-      return;  
-    
+      return;
+
 }
 
 int remNode(struct table *table, char* word)
 {
   struct bucket *list = hashWord(table, word);
-  
+  int i = 1;
+  struct node *currNode = list->head;
+  struct node *tmpNextNode;
   if (list == NULL){
     //No way to return pointer to a new empty list.
     printf("ERROR: List is empty \n");
     return -1;
   }
-  
+
    if (list->head == NULL) {//Handle empty list
        return -1;
     }
-  list->numNodes--;   
-    struct node *currNode = list->head;
+  list->numNodes--;
     if (strcmp(currNode->word, word) == 0) {//Handle remove head
       freeAll(list->head->head);
       list->head = currNode->next;
@@ -124,9 +127,9 @@ int remNode(struct table *table, char* word)
       free(currNode);
       return 0;
     }
-    
-    int i = 1;
-    struct node *tmpNextNode = currNode->next;
+
+
+    tmpNextNode = currNode->next;
     while (currNode->next != NULL){//Iterate through the list until you reach the end of the list, or you reach the node with the input name. Doesn't break/return when the word is found, so should delete all instances.
       if (strcmp(currNode->next->word, word) == 0) {
         freeAll(currNode->next->head);
@@ -139,7 +142,7 @@ int remNode(struct table *table, char* word)
       currNode = currNode->next;
       i++;
     }
-   
+
   //if you reach the end of the while loop without returning, the node must not be in the list, so you don't need to do anything
     return -1;
 }
@@ -148,15 +151,15 @@ double sumDoc(struct table *table, int id){
   int i = 0;
   double sum = 0;
   struct bucket *list;
-  
+
   for (i = 0; i < table->numBuckets; i++){
     list = table->buckets + i; //list is a point to one of the buckets in the table's array of buckets.
-  
+
     if (list == NULL){
       printf("ERROR: List is empty \n");
       return -1;
     }
-  
+
     struct node* currNode = list->head;
     while (currNode != NULL) {
       if (currNode->id == id){
@@ -171,15 +174,15 @@ double sumDoc(struct table *table, int id){
 void normalizeFreq(struct table *table, int id, double sum){//Takes the sum of the total number of words in a document
   int i = 0;
   struct bucket *list;
-  
+
   for (i = 0; i < table->numBuckets; i++){
     list = table->buckets + i; //list is a pointer to one of the buckets in the table's array of buckets.
-  
+
     if (list == NULL){
       printf("ERROR: List is empty \n");
       return;
     }
-  
+
     struct node* currNode = list->head;
     while (currNode != NULL) {//Handle empty list
       if (currNode->id == id){
@@ -193,14 +196,13 @@ void normalizeFreq(struct table *table, int id, double sum){//Takes the sum of t
 double sumWord(struct table *table, char* word){
   //Go through the table, and sum how many documents the word appears in. Save a list of documents that the word has been see in. THERE IS ONLY 1 INSTANCE OF EACH WORD PER DOCUMENT. EVERY TIME YOU SEE IT, YOU KNOW IT IS A UNIQUE DOCUMENT.
  int sum = 0;
-  
+
   struct bucket *list = hashWord(table, word);  //list will be a pointer to the bucket where the word hashes to.
-  
+  struct node *currNode = list->head;
     if (list == NULL){
       return 0;
     }
-  
-    struct node* currNode = list->head;
+
     while (currNode != NULL) {
       if (strcmp(currNode->word, word) == 0){ //If you find the word, increment how many document it is seen in.
         sum++;
@@ -211,9 +213,9 @@ double sumWord(struct table *table, char* word){
 }
 
 double findFreq(struct table *table, char* word, int id){
-  
+
   struct bucket *list = hashWord(table, word);
-  
+
   struct node *currNode = list->head;
   struct docNode *docNode;
   while (currNode != NULL){
@@ -227,7 +229,7 @@ double findFreq(struct table *table, char* word, int id){
 	}
     }
     currNode = currNode->next;
- } 
+ }
   return 0;
 }
 
@@ -248,7 +250,7 @@ void idf(struct table *table, int numDocs){
 		}
 	}
 
-	return;       
+	return;
 }
 
 int addDoc(struct node *node, int id){//adds a document to the linkedlist of documents for a particular word
@@ -265,7 +267,7 @@ int addDoc(struct node *node, int id){//adds a document to the linkedlist of doc
 	while (currNode->next != NULL){//Go through the list, if it is already in the list, increment the term frequency
 		if(currNode->next->id == id){
 			currNode->next->frequency++;
-			return 0;		
+			return 0;
 		}
 	currNode = currNode->next;//Go to the next node in the document list.
 	}
@@ -280,7 +282,7 @@ int findTf(struct docNode *head, int id){//return the tf of a document.
 		}
 	head = head->next;
 	}//If you went through the list, and you don't find the id, then the list doesn't contain that document
-return -1;						
+return -1;
 }
 */
 void freeAll(struct docNode *head){

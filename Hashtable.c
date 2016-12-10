@@ -4,7 +4,7 @@
 #include <math.h>
 #include "Hashtable.h"
 
-struct bucket* hashWord(struct table* table, char* word){
+struct bucket* hash_code(struct table* table, char* word){
   int j = 0;//Calculate the hash value of the word
   int sum = 0;
   struct bucket *list;
@@ -17,7 +17,7 @@ struct bucket* hashWord(struct table* table, char* word){
 
 void hash_table_insert(struct table* t, char* word, int id)
 {  //Insert function takes input as pointer to an array  of characters (string), and i, the id of the document.
-  addNode(hashWord(t, word), word, id); //Calls linked list add on the bucket, using the modulus hashing algorithm, passing it an actual bucket
+  addNode(hash_code(t, word), word, id); //Calls linked list add on the bucket, using the modulus hashing algorithm, passing it an actual bucket
 }
 
 void printList(struct bucket *list)
@@ -106,7 +106,7 @@ void addNode(struct bucket *list, char* word, int id)
 
 int remNode(struct table *table, char* word)
 {
-  struct bucket *list = hashWord(table, word);
+  struct bucket *list = hash_code(table, word);
   int i = 1;
   struct node *currNode = list->head;
   struct node *tmpNextNode;
@@ -197,7 +197,7 @@ double sumWord(struct table *table, char* word){
   //Go through the table, and sum how many documents the word appears in. Save a list of documents that the word has been see in. THERE IS ONLY 1 INSTANCE OF EACH WORD PER DOCUMENT. EVERY TIME YOU SEE IT, YOU KNOW IT IS A UNIQUE DOCUMENT.
  int sum = 0;
 
-  struct bucket *list = hashWord(table, word);  //list will be a pointer to the bucket where the word hashes to.
+  struct bucket *list = hash_code(table, word);  //list will be a pointer to the bucket where the word hashes to.
   struct node *currNode = list->head;
     if (list == NULL){
       return 0;
@@ -214,7 +214,7 @@ double sumWord(struct table *table, char* word){
 
 double findFreq(struct table *table, char* word, int id){
 
-  struct bucket *list = hashWord(table, word);
+  struct bucket *list = hash_code(table, word);
 
   struct node *currNode = list->head;
   struct docNode *docNode;

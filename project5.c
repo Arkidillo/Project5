@@ -178,7 +178,7 @@ char** read_query(){
   char buffer[LINE_MAX];
 
   printf("Enter your search query: ");
-  fgets(buffer, LINE_MAX, stdin);  //First fgets to clear the left over newline from the scanf.
+  //fgets(buffer, LINE_MAX, stdin);
   fgets(buffer, LINE_MAX, stdin);
   printf("\n");
 
@@ -203,6 +203,7 @@ char** read_query(){
 int main(){
   int numBuckets;
   char** query;
+  char buffer[10];
   int i = 0;
 
   struct table *table = malloc(sizeof(struct table)); //Memory allocated for table (should only have to allocate space for one pointer)
@@ -210,19 +211,29 @@ int main(){
   //Read user input for number of bucetks:
   printf("How many buckets should the hashtable have?");
   scanf("%d", &numBuckets);
-
-  //Malloc that many buckets
-  table->buckets = malloc(sizeof(struct bucket) * numBuckets);
+  fgets(buffer, 10, stdin);//First fgets to clear the left over newline from the scanf.
+  table->buckets = malloc(sizeof(struct bucket) * numBuckets);//mallocs that number of buckets
   table->numBuckets = numBuckets;
 
   //Read in search query
 
-  query = read_query();
+  while(1){
+    printf("Enter 'S' to search, 'X' to exit");
+    fgets(buffer, 10, stdin);
+    if (strcmp(buffer, "S\n") == 0 || strcmp(buffer, "s\n") == 0){
 
-  i = training(table);
-  rank(table, query, i);
-  printHashTable(table);
+      query = read_query();
 
-  printf("\n");
+      i = training(table);
+      rank(table, query, i);
+      printHashTable(table);
+
+      printf("\n");
+    } else if (strcmp(buffer, "X\n") == 0 || strcmp(buffer, "x\n") == 0){
+      return 0;
+    } else {
+      printf("Invalid input. Try again\n\n");
+    }
+  }
   return 0;
 }
